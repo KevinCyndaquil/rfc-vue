@@ -1,121 +1,198 @@
 <script setup>
+import Button from 'primevue/button';
+import Column from 'primevue/column';
+import DataTable from 'primevue/datatable';
+import Dialog from 'primevue/dialog';
+import InputNumber from 'primevue/inputnumber';
+import InputText from 'primevue/inputtext';
+import Toast from 'primevue/toast';
 import { ref } from 'vue';
 
-const dropdownItems = ref([
-    { name: 'Option 1', code: 'Option 1' },
-    { name: 'Option 2', code: 'Option 2' },
-    { name: 'Option 3', code: 'Option 3' }
-]);
+const productos = ref([]);
+const nuevoProducto = ref({
+    nombre: '',
+    precioUnitario: 0,
+    cantidad: 1
+});
+const totalSinIva = ref(0);
+const iva = ref(0);
+const totalConIva = ref(0);
 
-const dropdownItem = ref(null);
+const toast = ref(null);
+const visibleUpdate = ref(false);
+const visibleDelete = ref(false);
+const productoSeleccionado = ref(null);
+const nomp = ref('');
+const precioUnitario = ref(0);
+const cantidad = ref(1);
+
+function agregarProducto() {
+    if (nuevoProducto.value.nombre && nuevoProducto.value.precioUnitario > 0) {
+        const producto = {
+            consecutivo: productos.value.length + 1,
+            nombre: nuevoProducto.value.nombre,
+            precioUnitario: nuevoProducto.value.precioUnitario,
+            cantidad: nuevoProducto.value.cantidad,
+            precioTotal: nuevoProducto.value.precioUnitario * nuevoProducto.value.cantidad
+        };
+        productos.value.push(producto);
+        calcularTotales();
+        toast.value.add({ severity: 'success', summary: 'Producto agregado', detail: `El producto "${producto.nombre}" se ha agregado correctamente.`, life: 3000 });
+        nuevoProducto.value.nombre = '';
+        nuevoProducto.value.precioUnitario = 0;
+        nuevoProducto.value.cantidad = 1;
+    } else {
+        toast.value.add({ severity: 'error', summary: 'Error', detail: 'Por favor, ingrese un nombre y precio válido.', life: 3000 });
+    }
+}
+
+function calcularTotales() {
+    totalSinIva.value = productos.value.reduce((sum, producto) => sum + producto.precioTotal, 0);
+    iva.value = totalSinIva.value * 0.16;
+    totalConIva.value = totalSinIva.value + iva.value;
+}
+
+function editarProducto(producto) {
+    productoSeleccionado.value = producto;
+    nomp.value = producto.nombre;
+    precioUnitario.value = producto.precioUnitario;
+    cantidad.value = producto.cantidad;
+    visibleUpdate.value = true;
+}
+
+function updateProducto() {
+    if (productoSeleccionado.value) {
+        productoSeleccionado.value.nombre = nomp.value;
+        productoSeleccionado.value.precioUnitario = precioUnitario.value;
+        productoSeleccionado.value.cantidad = cantidad.value;
+        productoSeleccionado.value.precioTotal = precioUnitario.value * cantidad.value;
+        calcularTotales();
+        visibleUpdate.value = false;
+        toast.value.add({ severity: 'success', summary: 'Producto actualizado', detail: `El producto "${productoSeleccionado.value.nombre}" se ha actualizado correctamente.`, life: 3000 });
+    }
+}
+
+// Eliminar un producto
+function eliminarProducto(producto) {
+    productoSeleccionado.value = producto;
+    visibleDelete.value = true;
+}
+
+// Confirmar eliminación del producto
+function deleteProducto() {
+    if (productoSeleccionado.value) {
+        productos.value = productos.value.filter((producto) => producto !== productoSeleccionado.value);
+        calcularTotales();
+        visibleDelete.value = false;
+        toast.value.add({ severity: 'success', summary: 'Producto eliminado', detail: `El producto "${productoSeleccionado.value.nombre}" ha sido eliminado.`, life: 3000 });
+    }
+}
 </script>
 
 <template>
-    <Fluid>
-        <div class="flex flex-col md:flex-row gap-8">
-            <div class="md:w-1/2">
-                <div class="card flex flex-col gap-4">
-                    <div class="font-semibold text-xl">Vertical</div>
-                    <div class="flex flex-col gap-2">
-                        <label for="name1">Name</label>
-                        <InputText id="name1" type="text" />
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <label for="email1">Email</label>
-                        <InputText id="email1" type="text" />
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <label for="age1">Age</label>
-                        <InputText id="age1" type="text" />
-                    </div>
-                </div>
-
-                <div class="card flex flex-col gap-4">
-                    <div class="font-semibold text-xl">Vertical Grid</div>
-                    <div class="flex flex-wrap gap-4">
-                        <div class="flex flex-col grow basis-0 gap-2">
-                            <label for="name2">Name</label>
-                            <InputText id="name2" type="text" />
-                        </div>
-                        <div class="flex flex-col grow basis-0 gap-2">
-                            <label for="email2">Email</label>
-                            <InputText id="email2" type="text" />
-                        </div>
-                    </div>
-                </div>
+    <div>
+        <div class="mb-4 flex flex-col md:flex-row gap-4">
+            <div class="flex flex-col w-full md:w-1/4">
+                <label for="nombre">Nombre</label>
+                <InputText v-model="nuevoProducto.nombre" id="nombre" type="text" placeholder="Nombre del producto" />
             </div>
-            <div class="md:w-1/2">
-                <div class="card flex flex-col gap-4">
-                    <div class="font-semibold text-xl">Horizontal</div>
-                    <div class="grid grid-cols-12 gap-2">
-                        <label for="name3" class="flex items-center col-span-12 mb-2 md:col-span-2 md:mb-0">Name</label>
-                        <div class="col-span-12 md:col-span-10">
-                            <InputText id="name3" type="text" />
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-12 gap-2">
-                        <label for="email3" class="flex items-center col-span-12 mb-2 md:col-span-2 md:mb-0">Email</label>
-                        <div class="col-span-12 md:col-span-10">
-                            <InputText id="email3" type="text" />
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card flex flex-col gap-4">
-                    <div class="font-semibold text-xl">Inline</div>
-                    <div class="flex flex-wrap items-start gap-4">
-                        <div class="field">
-                            <label for="firstname1" class="sr-only">Firstname</label>
-                            <InputText id="firstname1" type="text" placeholder="Firstname" />
-                        </div>
-                        <div class="field">
-                            <label for="lastname1" class="sr-only">Lastname</label>
-                            <InputText id="lastname1" type="text" placeholder="Lastname" />
-                        </div>
-                        <Button label="Submit" :fluid="false"></Button>
-                    </div>
-                </div>
-                <div class="card flex flex-col gap-4">
-                    <div class="font-semibold text-xl">Help Text</div>
-                    <div class="flex flex-wrap gap-2">
-                        <label for="username">Username</label>
-                        <InputText id="username" type="text" />
-                        <small>Enter your username to reset your password.</small>
-                    </div>
-                </div>
+            <div class="flex flex-col w-full md:w-1/4">
+                <label for="precioUnitario">Precio Unitario</label>
+                <InputNumber v-model="nuevoProducto.precioUnitario" id="precioUnitario" type="number"
+                    placeholder="Precio unitario" />
+            </div>
+            <div class="flex flex-col w-full md:w-1/4">
+                <label for="cantidad">Cantidad</label>
+                <InputNumber v-model="nuevoProducto.cantidad" id="cantidad" type="number" min="1"
+                    placeholder="Cantidad" />
+            </div>
+            <div class="flex items-end justify-end w-full md:w-1/4">
+                <Button label="Agregar Producto" icon="pi pi-plus" @click="agregarProducto" />
             </div>
         </div>
 
-        <div class="flex mt-8">
-            <div class="card flex flex-col gap-4 w-full">
-                <div class="font-semibold text-xl">Advanced</div>
-                <div class="flex flex-col md:flex-row gap-4">
-                    <div class="flex flex-wrap gap-2 w-full">
-                        <label for="firstname2">Firstname</label>
-                        <InputText id="firstname2" type="text" />
-                    </div>
-                    <div class="flex flex-wrap gap-2 w-full">
-                        <label for="lastname2">Lastname</label>
-                        <InputText id="lastname2" type="text" />
-                    </div>
-                </div>
+        <!-- DataTable de productos -->
+        <div class="mb-4">
+            <DataTable :value="productos" responsiveLayout="scroll" class="p-datatable-striped">
+                <Column field="consecutivo" header="Consecutivo" />
+                <Column field="nombre" header="Nombre" />
+                <Column field="precioUnitario" header="Precio Unitario" />
+                <Column field="cantidad" header="Cantidad" />
+                <Column field="precioTotal" header="Precio Total" />
+                <Column style="width: 140px" header="Acciones">
+                    <template #body="slotProps">
+                        <Button icon="pi pi-pencil" type="button" class="p-button-success p-mr-2 p-mb-1"
+                            @click="editarProducto(slotProps.data)" />
+                        <Dialog v-model:visible="visibleUpdate" modal header="Actualizar datos de un producto"
+                            :style="{ width: '45vw' }">
+                            <div class="flex gap-2">
+                                <div class="flex-auto">
+                                    <label for="nomp"><strong>Nombre del producto: </strong></label>
+                                    <InputText class="ml-2" id="nomp" v-model="nomp" />
+                                </div>
+                                <div class="flex-auto">
+                                    <label for="precioUnitario"><strong>Precio Unitario: </strong></label>
+                                    <InputNumber class="ml-2" id="precioUnitario" v-model="precioUnitario" />
+                                </div>
+                                <div class="flex-auto">
+                                    <label for="cantidad"><strong>Cantidad: </strong></label>
+                                    <InputNumber class="ml-2" id="cantidad" v-model="cantidad" />
+                                </div>
+                            </div>
+                            <template #footer>
+                                <Button label="Actualizar" icon="pi pi-replay" @click="updateProducto" />
+                            </template>
+                        </Dialog>
 
-                <div class="flex flex-wrap">
-                    <label for="address">Address</label>
-                    <Textarea id="address" rows="4" />
-                </div>
+                        <Button icon="pi pi-trash" type="button" class="p-button-danger p-mb-1"
+                            @click="eliminarProducto(slotProps.data)" />
+                        <Dialog v-model:visible="visibleDelete" modal
+                            header="¿Estás seguro que quieres borrar este producto?" :style="{ width: '30vw' }">
+                            <template #footer>
+                                <Button label="Eliminar" severity="warning" icon="pi pi-check" @click="deleteProducto"
+                                    autofocus />
+                            </template>
+                        </Dialog>
+                    </template>
+                </Column>
+            </DataTable>
+        </div>
 
-                <div class="flex flex-col md:flex-row gap-4">
-                    <div class="flex flex-wrap gap-2 w-full">
-                        <label for="state">State</label>
-                        <Select id="state" v-model="dropdownItem" :options="dropdownItems" optionLabel="name" placeholder="Select One" class="w-full"></Select>
-                    </div>
-                    <div class="flex flex-wrap gap-2 w-full">
-                        <label for="zip">Zip</label>
-                        <InputText id="zip" type="text" />
-                    </div>
-                </div>
+        <!-- Totales -->
+        <div class="mt-4 p-4 border border-t-0 rounded-md">
+            <div class="flex justify-between">
+                <span>Total sin IVA:</span>
+                <span>{{ totalSinIva.toFixed(2) }} MXN</span>
+            </div>
+            <div class="flex justify-between">
+                <span>IVA (16%):</span>
+                <span>{{ iva.toFixed(2) }} MXN</span>
+            </div>
+            <div class="flex justify-between font-semibold">
+                <span>Total con IVA:</span>
+                <span>{{ totalConIva.toFixed(2) }} MXN</span>
             </div>
         </div>
-    </Fluid>
+
+        <!-- Toastr -->
+        <Toast ref="toast" />
+    </div>
 </template>
+
+<style scoped>
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 8px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+th {
+    background-color: #f4f4f4;
+}
+</style>

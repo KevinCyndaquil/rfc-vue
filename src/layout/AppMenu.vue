@@ -11,8 +11,8 @@ const model = ref([
     {
         label: 'UI Components',
         items: [
-            { label: 'Demo Clientes', icon: 'pi pi-fw pi-id-card', to: '/uikit/FormClientes' },
-            { label: 'Form Layout', icon: 'pi pi-fw pi-id-card', to: '/uikit/formlayout' },
+            { label: 'Generar RFC', icon: 'pi pi-fw pi-id-card', to: '/uikit/FormClientes' },
+            { label: 'Compras', icon: 'pi pi-fw pi-id-card', to: '/uikit/formlayout' },
             { label: 'Input', icon: 'pi pi-fw pi-check-square', to: '/uikit/input' },
             { label: 'Button', icon: 'pi pi-fw pi-mobile', to: '/uikit/button', class: 'rotated-icon' },
             { label: 'Table', icon: 'pi pi-fw pi-table', to: '/uikit/table' },
